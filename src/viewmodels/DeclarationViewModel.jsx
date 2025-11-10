@@ -1,10 +1,7 @@
 // src/viewmodels/DeclarationViewModel.js
 export class DeclarationViewModel {
   constructor() {
-    // Récupérer tout l'objet user depuis localStorage
     const storedUser = JSON.parse(localStorage.getItem('user'));
-
-    // Si rien n'est trouvé, fournir des valeurs par défaut
     this.user = storedUser || {
       nom: 'Anaïs',
       prenom: 'Bahloul',
@@ -13,22 +10,32 @@ export class DeclarationViewModel {
       adresse: '',
       email: '',
       telephone: '',
-      citoyennete: ''
+      citoyennete: '',
+      lastDeclarationStep: null // on ajoute ça
     };
   }
 
-  saveDraft(form) {
+  saveDraft(form, step) {
     console.log('Draft saved:', form);
     alert('Brouillon enregistré');
 
-    // Pour sauvegarder côté client : mettre à jour localStorage si tu veux
+    // 1️⃣ Sauvegarder le brouillon
     localStorage.setItem('draftDeclaration', JSON.stringify(form));
+
+    // 2️⃣ Mettre à jour l'avancement dans l'utilisateur
+    const updatedUser = { ...this.user, lastDeclarationStep: step };
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    this.user = updatedUser; // mettre à jour l'objet courant
   }
 
   submitDeclaration(form) {
     console.log('Déclaration soumise:', form);
     alert('Déclaration soumise !');
 
-    // Ici tu peux envoyer form vers le serveur via fetch/axios
+    // On peut aussi réinitialiser le draft et la dernière étape
+    localStorage.removeItem('draftDeclaration');
+    const updatedUser = { ...this.user, lastDeclarationStep: null };
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    this.user = updatedUser;
   }
 }

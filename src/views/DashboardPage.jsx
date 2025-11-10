@@ -28,13 +28,15 @@ export default function DashboardPage() {
     fetchData();
   }, []);
 
-  const handleDeclarationClick = () => {
-    if (summary.lastDeclarationStep) {
-      navigate(`/declaration/step${summary.lastDeclarationStep}`);
-    } else {
-      navigate('/declaration/step1');
-    }
-  };
+  const handleDeclarationClick = (action) => {
+  if (action === 'poursuivre') {
+    navigate('/declaration', { state: { step: summary.lastDeclarationStep } });
+  } else {
+    // Nouvelle déclaration → étape 1 et reset formulaire
+    navigate('/declaration', { state: { step: 1, reset: true } });
+  }
+};
+
 
   return (
     <div style={{ display: 'flex', background: '#f3f4f6', minHeight: '100vh', justifyContent: 'center' }}>
@@ -51,21 +53,44 @@ export default function DashboardPage() {
           <div className="row g-4">
 
   {/* Déclaration */}
-  <div className="col-12 col-md-6">
-    <div className="card shadow-sm">
-      <div className="card-body d-flex flex-column gap-2">
-        <h5 className="fw-semibold">Déclaration</h5>
-        <p className="text-secondary small mb-2">
-          {summary.lastDeclarationStep
-            ? `Reprendre la déclaration à l'étape ${summary.lastDeclarationStep}`
-            : 'Commencer une nouvelle déclaration en 3 étapes.'}
-        </p>
-        <button className="btn btn-primary" onClick={handleDeclarationClick}>
-          {summary.lastDeclarationStep ? 'Poursuivre' : 'Nouvelle déclaration'}
+<div className="col-12 col-md-6">
+  <div className="card shadow-sm">
+    <div className="card-body d-flex flex-column gap-2">
+      <h5 className="fw-semibold">Déclaration</h5>
+      <p className="text-secondary small mb-2">
+  {summary.lastDeclarationStep
+    ? `Déclaration en cours, arrivée à l'étape ${summary.lastDeclarationStep}.`
+    : 'Commencer une nouvelle déclaration en 3 étapes.'}
+</p>
+
+
+      {summary.lastDeclarationStep ? (
+        <div className="d-flex gap-2">
+          <button
+            className="btn btn-outline-primary btn-sm"
+            onClick={() => handleDeclarationClick('poursuivre')}
+          >
+            Poursuivre
+          </button>
+          <button
+            className="btn btn-outline-secondary btn-sm"
+            onClick={() => handleDeclarationClick('nouvelle')}
+          >
+            Nouvelle déclaration
+          </button>
+        </div>
+      ) : (
+        <button
+          className="btn btn-outline-primary btn-sm"
+          onClick={() => handleDeclarationClick('nouvelle')}
+        >
+          Nouvelle déclaration
         </button>
-      </div>
+      )}
     </div>
   </div>
+</div>
+
 
   {/* Suivi */}
   <div className="col-12 col-md-6">

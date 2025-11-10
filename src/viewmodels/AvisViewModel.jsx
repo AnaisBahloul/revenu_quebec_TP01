@@ -21,7 +21,7 @@ export class AvisViewModel {
       requiresAgentReview: true,
       adjustmentNotes: [
         'Revenus d’intérêts initialement manquants',
-        'Pièce justificative T5 à fournir'
+        'Données incohérentes'
       ]
     };
   }

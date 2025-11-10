@@ -29,124 +29,152 @@ export default function AvisPage() {
     fetchAvis();
   }, [id]);
 
+  // Fonction utilitaire pour déterminer si le montant est positif ou négatif
+  const isPositive = (amount) => {
+    if (!amount) return true;
+    const numeric = parseFloat(amount.replace(/\s|\$/g, '').replace(',', '.'));
+    return numeric >= 0;
+  };
+
   return (
-    <div style={{display:'flex', background:'#f3f4f6', minHeight:'100vh'}}>
+    <div style={{ display: 'flex', background: '#f3f4f6', minHeight: '100vh', justifyContent: 'center' }}>
       <Navigation />
-      <div style={styles.content}>
-        <div style={styles.card}>
-          <div style={styles.header}>
-            <div>
-              <p style={styles.subtitle}>Avis de cotisation • {avis.year || '—'}</p>
-              <h1 style={styles.title}>Avis de cotisation</h1>
-              <p style={styles.meta}>Référence : {avis.refNumber || '—'}</p>
-              <p style={styles.meta}>Généré le : {avis.generationDate || '—'}</p>
-            </div>
-            <div style={styles.actions}>
-              <button onClick={() => vm.downloadPDF(id)} style={styles.primaryButton}>Télécharger PDF</button>
-              <button onClick={() => navigate('/avis')} style={styles.secondaryButton}>Retour</button>
-            </div>
-          </div>
 
-          <div style={styles.infoGrid}>
-            <div style={styles.infoBlock}>
-              <h2 style={styles.blockTitle}>Identité du contribuable</h2>
-              <p><strong>Nom :</strong> {avis.prenom} {avis.nom}</p>
-              <p><strong>NAS :</strong> {avis.nas || '—'}</p>
-              <p><strong>Année fiscale :</strong> {avis.year || '—'}</p>
-            </div>
-            <div style={styles.infoBlock}>
-              <h2 style={styles.blockTitle}>Montant final</h2>
-              <p style={styles.amount}>{avis.amount || '—'}</p>
-              <p>Montant à payer ou à recevoir selon le calcul ci-dessous.</p>
-            </div>
-          </div>
+      <div className="container my-4">
+        <div className="row justify-content-center">
+          <div className="col-12">
+            <div className="card shadow-sm" style={{ ...styles.card, maxWidth: '100%' }}>
+              <div style={styles.header}>
+                <div>
+                  <p style={styles.subtitle}>Avis de cotisation • {avis.year || '—'}</p>
+                  <h1 style={styles.title}>Avis de cotisation</h1>
+                  <p style={styles.meta}>Référence : {avis.refNumber || '—'}</p>
+                  <p style={styles.meta}>Généré le : {avis.generationDate || '—'}</p>
+                </div>
+                <div style={styles.actions}>
+                  <button onClick={() => vm.downloadPDF(id)} style={styles.primaryButton}>Télécharger PDF</button>
+                  <button onClick={() => navigate('/avis')} style={styles.secondaryButton}>Retour</button>
+                </div>
+              </div>
 
-          <section style={styles.section}>
-            <h2 style={styles.sectionTitle}>Résumé des revenus déclarés</h2>
-            <div style={{overflowX:'auto'}}>
-              <table style={styles.table}>
-                <thead>
-                  <tr>
-                    <th style={styles.th}>Type</th>
-                    <th style={styles.th}>Description</th>
-                    <th style={{ ...styles.th, borderRight:'none' }}>Montant</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {avis.incomeSummary && avis.incomeSummary.length > 0 ? (
-                    avis.incomeSummary.map((item, idx) => (
-                      <tr key={idx} style={idx % 2 ? styles.rowAlt : undefined}>
-                        <td style={styles.td}>{item.type}</td>
-                        <td style={styles.td}>{item.description}</td>
-                        <td style={{ ...styles.td, borderRight:'none' }}>{item.amount}</td>
+              <div style={styles.infoGrid}>
+                <div style={styles.infoBlock}>
+                  <h2 style={styles.blockTitle}>Identité du contribuable</h2>
+                  <p><strong>Nom :</strong> {avis.prenom} {avis.nom}</p>
+                  <p><strong>NAS :</strong> {avis.nas || '—'}</p>
+                  <p><strong>Année fiscale :</strong> {avis.year || '—'}</p>
+                </div>
+                <div style={styles.infoBlock}>
+  <h2 style={styles.blockTitle}>Montant final</h2>
+  <p style={{ 
+      ...styles.amount, 
+      color: isPositive(avis.taxCalculation?.amountPayable) ? '#047857' : '#dc2626'
+    }}>
+    {avis.taxCalculation?.amountPayable || '—'}
+  </p>
+  <p style={{ color: isPositive(avis.taxCalculation?.amountPayable) ? '#047857' : '#dc2626' }}>
+    {isPositive(avis.taxCalculation?.amountPayable) ? 'Montant à recevoir' : 'Montant à payer'}
+  </p>
+</div>
+
+              </div>
+
+              <section style={styles.section}>
+                <h2 style={styles.sectionTitle}>Résumé des revenus déclarés</h2>
+                <div style={{overflowX:'auto'}}>
+                  <table style={styles.table}>
+                    <thead>
+                      <tr>
+                        <th style={styles.th}>Type</th>
+                        <th style={styles.th}>Description</th>
+                        <th style={{ ...styles.th, borderRight:'none' }}>Montant</th>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td style={{ ...styles.td, borderRight:'none' }} colSpan={3}>Aucun revenu déclaré.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </section>
+                    </thead>
+                    <tbody>
+                      {avis.incomeSummary && avis.incomeSummary.length > 0 ? (
+                        avis.incomeSummary.map((item, idx) => (
+                          <tr key={idx} style={idx % 2 ? styles.rowAlt : undefined}>
+                            <td style={styles.td}>{item.type}</td>
+                            <td style={styles.td}>{item.description}</td>
+                            <td style={{ ...styles.td, borderRight:'none' }}>{item.amount}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td style={{ ...styles.td, borderRight:'none' }} colSpan={3}>Aucun revenu déclaré.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
 
-          <section style={styles.section}>
-            <h2 style={styles.sectionTitle}>Calcul de l’impôt</h2>
-            <div style={styles.calcGrid}>
-              <div style={styles.calcCard}>
-                <p style={styles.calcLabel}>Revenu imposable</p>
-                <p style={styles.calcValue}>{avis.taxCalculation?.taxableIncome || '—'}</p>
-              </div>
-              <div style={styles.calcCard}>
-                <p style={styles.calcLabel}>Déductions</p>
-                <p style={styles.calcValue}>{avis.taxCalculation?.deductions || '—'}</p>
-              </div>
-              <div style={styles.calcCard}>
-                <p style={styles.calcLabel}>Impôt net</p>
-                <p style={styles.calcValue}>{avis.taxCalculation?.netTax || '—'}</p>
-              </div>
-              <div style={styles.calcCard}>
-                <p style={styles.calcLabel}>Montant à payer / recevoir</p>
-                <p style={styles.calcValue}>{avis.taxCalculation?.amountPayable || '—'}</p>
-              </div>
-            </div>
-          </section>
+              <section style={styles.section}>
+                <h2 style={styles.sectionTitle}>Calcul de l’impôt</h2>
+                <div style={styles.calcGrid}>
+                  <div style={styles.calcCard}>
+                    <p style={styles.calcLabel}>Revenu imposable</p>
+                    <p style={styles.calcValue}>{avis.taxCalculation?.taxableIncome || '—'}</p>
+                  </div>
+                  <div style={styles.calcCard}>
+                    <p style={styles.calcLabel}>Déductions</p>
+                    <p style={styles.calcValue}>{avis.taxCalculation?.deductions || '—'}</p>
+                  </div>
+                  <div style={styles.calcCard}>
+                    <p style={styles.calcLabel}>Impôt net</p>
+                    <p style={styles.calcValue}>{avis.taxCalculation?.netTax || '—'}</p>
+                  </div>
+                  <div style={styles.calcCard}>
+  <p style={styles.calcLabel}>Montant à payer / recevoir</p>
+  <p style={{ 
+      ...styles.calcValue, 
+      color: isPositive(avis.taxCalculation?.amountPayable) ? '#047857' : '#dc2626'
+    }}>
+    {avis.taxCalculation?.amountPayable || '—'}
+  </p>
+</div>
 
-          {avis.requiresAgentReview && (
-            <section style={styles.alertSection}>
-              <h2 style={styles.sectionTitle}>Avis personnalisé par un agent</h2>
-              <p style={{marginBottom:'10px'}}>
-                Cette déclaration a été examinée par un agent en raison d’incohérences détectées. Ajustements / précisions :
-              </p>
-              <ul style={styles.noteList}>
-                {avis.adjustmentNotes?.map((note, index) => (
-                  <li key={index}>{note}</li>
-                ))}
-              </ul>
-            </section>
-          )}
+                </div>
+              </section>
+
+              {avis.requiresAgentReview && (
+                <section style={styles.alertSection}>
+                  <h2 style={styles.sectionTitle}>Avis personnalisé par un agent</h2>
+                  <p style={{marginBottom:'10px'}}>
+                    Cette déclaration a été examinée par un agent en raison d’incohérences détectées. Ajustements / précisions :
+                  </p>
+                  <ul style={styles.noteList}>
+                    {avis.adjustmentNotes?.map((note, index) => (
+                      <li key={index}>{note}</li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
+
 const styles = {
   content: {
-    flex: 1,
-    padding: '15px',           // réduit par rapport à 30px
-    display: 'flex',
-    justifyContent: 'center'
-  },
+  padding: '15px',
+  display: 'flex',
+  justifyContent: 'center'
+}
+,
   card: {
-    width: '100%',
-    maxWidth: '630px',         // comme ProfilePage
+    width: '630px',
+    margin: '0 auto',       
     background: '#ffffff',
     borderRadius: '10px',      // légèrement plus petit
     boxShadow: '0 8px 20px rgba(0,0,0,0.05)', // ombre plus douce
     padding: '20px',           // padding réduit
-    boxSizing: 'border-box'
+    boxSizing: 'border-box',
+    
   },
   header: {
     display: 'flex',
@@ -196,7 +224,7 @@ const styles = {
   },
   infoGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', // un peu plus serré
+    gridTemplateColumns: '1fr 1fr', // un peu plus serré
     gap: '10px',
     marginBottom: '16px'
   },
@@ -250,7 +278,7 @@ const styles = {
   },
   calcGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', // plus serré
+    gridTemplateColumns: '1fr 1fr 1fr 1fr', // plus serré
     gap: '10px'
   },
   calcCard: {
