@@ -144,14 +144,22 @@ export default function AvisPage() {
               
               
               
-              {!avis.requiresAgentReview && (
+              
+             
+{/* ✅ Avis généré automatiquement, aucun agent requis */}
+{!avis.requiresAgentReview && (
   <section style={styles.alertSection}>
     <h2 style={styles.sectionTitle}>Avis généré automatiquement</h2>
-    <p>
-      Cet avis a été produit automatiquement.
+
+    <p style={{marginBottom:'10px'}}>
+      Cet avis a été produit automatiquement. 
+      
     </p>
+
+   
   </section>
 )}
+
 
 
               {avis.requiresAgentReview && (
