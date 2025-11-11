@@ -1,11 +1,14 @@
-// src/viewmodels/StatusViewModel.js
 export class StatusViewModel {
   async fetchCurrentStatus() {
-    // Simuler l’état de traitement
     return {
-      etat: 'En cours',
-      dateSoumission: '2025-11-06',
-      messages: 'Traitement en cours par Revenu Québec.'
+      etat: "En révision par un agent",
+      dateSoumission: "2025-11-10",
+      messages: "Votre dossier est en analyse.",
+      
+      // NOUVELLES DATES PAR ÉTAPE
+      dateRecu: "2025-11-09",
+      dateValidationAuto: "2025-11-09 14:32",
+      dateRevisionAgent: "2025-11-10 08:10"
     };
   }
 }

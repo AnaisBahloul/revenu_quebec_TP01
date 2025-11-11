@@ -49,7 +49,12 @@ export default function AvisPage() {
                   <p style={styles.subtitle}>Avis de cotisation • {avis.year || '—'}</p>
                   <h1 style={styles.title}>Avis de cotisation</h1>
                   <p style={styles.meta}>Référence : {avis.refNumber || '—'}</p>
-                  <p style={styles.meta}>Généré le : {avis.generationDate || '—'}</p>
+                  <p style={styles.meta}>
+  {avis.type === 'automatique'
+    ? 'Généré le :'
+    : 'Rédigé par un agent le :'} {avis.generationDate || '—'}
+</p>
+
                 </div>
                 <div style={styles.actions}>
                   <button onClick={() => vm.downloadPDF(id)} style={styles.primaryButton}>Télécharger PDF</button>
@@ -136,6 +141,18 @@ export default function AvisPage() {
 
                 </div>
               </section>
+              
+              
+              
+              {!avis.requiresAgentReview && (
+  <section style={styles.alertSection}>
+    <h2 style={styles.sectionTitle}>Avis généré automatiquement</h2>
+    <p>
+      Cet avis a été produit automatiquement.
+    </p>
+  </section>
+)}
+
 
               {avis.requiresAgentReview && (
                 <section style={styles.alertSection}>

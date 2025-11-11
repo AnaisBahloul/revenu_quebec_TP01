@@ -1,30 +1,37 @@
 export class AvisViewModel {
   async getAvisDetails(id) {
-    return {
-      nom: 'Utilisateur Test',
-      prenom: 'Camille',
-      nas: '123-456-789',
-      year: 2024,
-      amount: '1 500 $',
-      refNumber: 'RQ-2024-000' + id,
-      generationDate: '2025-01-12',
-      incomeSummary: [
-        { type: 'Revenus d’emploi', description: 'Société ABC', amount: '45 000 $' },
-        { type: 'Revenus d’intérêts', description: 'Institution XYZ', amount: '800 $' }
-      ],
-      taxCalculation: {
-        taxableIncome: '45 800 $',
-        deductions: '3 500 $',
-        netTax: '6 150 $',
-        amountPayable: '1 200 $'
-      },
-      requiresAgentReview: true,
-      adjustmentNotes: [
-        'Revenus d’intérêts initialement manquants',
-        'Données incohérentes'
-      ]
-    };
-  }
+  // exemple : id pair = automatique / impair = personnalisé
+  const isAuto = id % 2 === 0;
+
+  return {
+    nom: 'Utilisateur Test',
+    prenom: 'Camille',
+    nas: '123-456-789',
+    year: 2024,
+    amount: '1 500 $',
+    refNumber: 'RQ-2024-000' + id,
+    generationDate: '2025-01-12',
+
+    type: isAuto ? 'automatique' : 'personnalisé',
+    requiresAgentReview: !isAuto,
+
+    incomeSummary: [
+      { type: 'Revenus d’emploi', description: 'Société ABC', amount: '45 000 $' },
+      { type: 'Revenus d’intérêts', description: 'Institution XYZ', amount: '800 $' }
+    ],
+    taxCalculation: {
+      taxableIncome: '45 800 $',
+      deductions: '3 500 $',
+      netTax: '6 150 $',
+      amountPayable: '1 200 $'
+    },
+    adjustmentNotes: isAuto ? [] : [
+      'Revenus d’intérêts initialement manquants',
+      'Données incohérentes'
+    ]
+  };
+}
+
 
   async getAllAvis() {
     // Simuler une liste d'avis
