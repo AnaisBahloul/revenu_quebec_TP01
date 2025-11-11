@@ -3,9 +3,11 @@ export class HistoryViewModel {
   async fetchDeclarations() {
     // Simuler historique
     return [
-      { year: 2024, status: 'Validée', amount: 1500, avisId: 1 },
-      { year: 2023, status: 'En révision', amount: 1200, avisId: 2 }
-    ];
+  { avisId: 1, year: 2024, status: 'En traitement', amount: '—' },
+  { avisId: 2, year: 2023, status: 'Traitée', amount: '1200 $' },
+  { avisId: 3, year: 2022, status: 'Traitée', amount: '-800 $' },
+];
+
   }
 
   downloadPDF(avisId) {
@@ -15,4 +17,9 @@ export class HistoryViewModel {
   viewAvis(avisId) {
     alert('Voir avis ' + avisId);
   }
+
+  viewRevue(avisId) {
+  alert('Voir récapitulatif de la déclaration ' + avisId);
+}
+
 }

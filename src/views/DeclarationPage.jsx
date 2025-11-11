@@ -506,7 +506,7 @@ const removeAutreRevenu = (idx) => {
           ← Précédent
         </button>
         <button className="btn btn-outline-danger btn-sm" onClick={handleCancel}>Annuler</button>
-        <button className="btn btn-success btn-sm" onClick={handleSubmit}>Soumettre</button>
+        <button className="btn btn-outline-success btn-sm" onClick={handleSubmit}>Soumettre</button>
       </div>
 
     </div>
