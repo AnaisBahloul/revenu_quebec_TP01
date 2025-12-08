@@ -24,11 +24,17 @@ export default function ProfilePage() {
     setTempValue(profile[field] || '');
   };
 
-  const handleSave = (field) => {
-    setProfile({ ...profile, [field]: tempValue });
-    setEditingField(null);
-    // vm.updateProfile(field, tempValue) pour sauvegarde côté serveur
-  };
+  const handleSave = async (field) => {
+  setProfile({ ...profile, [field]: tempValue });
+  setEditingField(null);
+
+  // Appelle l’API pour mettre à jour la DB
+  const success = await vm.updateProfile(field, tempValue);
+  if (!success) {
+    alert('Erreur lors de la sauvegarde du profil. Veuillez réessayer.');
+  }
+};
+
 
   const renderEditableField = (label, field) => (
     <div className="d-flex justify-content-between align-items-center mb-2">

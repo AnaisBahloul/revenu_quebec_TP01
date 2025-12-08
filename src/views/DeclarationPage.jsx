@@ -33,7 +33,7 @@ useEffect(() => {
     telephone: '',
     citoyennete: '',
     revenusEmploi: [{ employeur: '', montant: '' }],
-    autresRevenus: [{ type: '', montant: '' }],
+    autresRevenus: [{ type: null, montant: '' }],
     fichiers: [],
     confirmationExactitude: false
   });
@@ -145,6 +145,12 @@ const handleCancel = () => {
   // navigate('/dashboard');
 };
 
+const typeRevenuOptions = [
+  { value: 1, label: "Revenus d'emploi" },
+  { value: 2, label: "Intérêts" },
+  { value: 3, label: "Placement" },
+  { value: 99, label: "Autre" },
+];
 
 
 const addRevenuEmploi = () => {
@@ -308,12 +314,12 @@ const removeAutreRevenu = (idx) => {
       {form.autresRevenus.map((rev, idx) => (
         <div className="row g-3 mb-2 align-items-center" key={idx}>
           <div className="col-md-8">
-            <input
-              className="form-control"
-              placeholder="Type de revenu (Placement, Gains de capital, Autres)"
-              value={rev.type}
-              onChange={(e) => handleChange("autresRevenus", idx, "type", e.target.value)}
-            />
+            <Select
+  options={typeRevenuOptions}
+  value={typeRevenuOptions.find(o => o.value === rev.type) || null}
+  onChange={(e) => handleChange("autresRevenus", idx, "type", e.value)}
+/>
+
           </div>
 
           <div className="col-md-3">

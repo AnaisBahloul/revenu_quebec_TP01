@@ -1,24 +1,32 @@
 // src/viewmodels/LoginViewModel.js
 export class LoginViewModel {
-  async login(email, password) {
-    // Simuler authentification
-    if (email === 'test@test.com' && password === '123456') {
-      // Stocker toutes les infos nécessaires pour les pages suivantes
-      localStorage.setItem('user', JSON.stringify({
-        email,
-        nom: 'Anaïs',
-        prenom: 'Bahloul',
-        nas: '123-456-789',
-        dob: '2004-03-15',
-        adresse: '123 rue Alphonses Desjardins',
-        telephone: '589-555-1234'
-      }));
-      return true;
-    }
-    return false;
+  constructor(baseURL = 'http://localhost:5100/api') {
+    this.baseURL = baseURL;
   }
 
-  logout() {
-    localStorage.removeItem('user');
+  async login(email, password) {
+    try {
+      const response = await fetch(`${this.baseURL}/authentification/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          courriel: email,
+          motDePasse: password
+        })
+      });
+
+      if (!response.ok) return false;
+
+      const data = await response.json();
+
+      localStorage.setItem("sessionId", data.sessionId);
+      localStorage.setItem("user", JSON.stringify(data.utilisateur));
+
+
+      return true;
+    } catch (err) {
+      console.error("Erreur login :", err);
+      return false;
+    }
   }
 }

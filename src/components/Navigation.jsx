@@ -7,8 +7,9 @@ export default function Navigation() {
   const navigate = useNavigate();
   const vm = new DashboardViewModel();
 
-  const handleLogout = () => {
-    vm.logout();
+  const handleLogout = async () => {  // ← AJOUTE "async" ici !
+    console.log('🔄 Bouton déconnexion cliqué');
+    await vm.logout();  // ← AJOUTE "await" ici !
     navigate('/');
   };
 
