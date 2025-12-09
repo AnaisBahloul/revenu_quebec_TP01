@@ -7,9 +7,10 @@ export default function HistoryPage() {
   const vm = new HistoryViewModel();
   const [declarations, setDeclarations] = useState([]);
 
+  
   useEffect(() => {
     const fetchData = async () => {
-      const data = await vm.fetchDeclarations();
+      const data = await vm.getAllDeclarations();
       setDeclarations(data);
     };
     fetchData();
@@ -85,7 +86,7 @@ export default function HistoryPage() {
                               {d.amount === '—' ? '—' : d.amount}
                             </td>
                             <td>
-  {['traitée', 'validée', 'traitée automatiquement', 'traitée avec révision'].includes(d.status.toLowerCase()) && (
+  {['reçue', 'traitée', 'validée', 'traitée automatiquement', 'traitée avec révision'].includes(d.status.toLowerCase()) && d.avisId && (
     <button
       className="btn btn-outline-primary btn-sm me-2"
       style={{ minWidth: '120px' }}
@@ -94,16 +95,18 @@ export default function HistoryPage() {
       Voir avis
     </button>
   )}
-  {['en traitement', 'en validation', 'en validation automatique', 'en révision par un agent'].includes(d.status.toLowerCase()) && (
+
+  {['en traitement', 'en validation automatique', 'en révision par un agent'].includes(d.status.toLowerCase()) && (
     <button
       className="btn btn-outline-secondary btn-sm"
       style={{ minWidth: '120px' }}
-      onClick={() => vm.viewRevue(d.avisId)}
+      onClick={() => vm.viewDeclaration(d.declarationId)}
     >
       Voir déclaration
     </button>
   )}
 </td>
+
 
                           </tr>
                         ))

@@ -23,13 +23,11 @@ export default function AvisListPage() {
       <Navigation />
 
       <div className="container my-4">
+        <h4 className="mb-4 text-center">Avis de cotisation</h4>
+
         <div className="row justify-content-center">
           <div className="col-12">
-            <h4 className="text-center mb-4">Avis de cotisation</h4>
-
-            {avisList.length === 0 ? (
-              <p className="text-secondary small text-center">Aucun avis disponible.</p>
-            ) : (
+            {avisList.length > 0 ? (
               avisList.map((avis) => (
                 <div key={avis.id} className="mb-3">
                   <div className="card shadow-sm" style={{ width: '630px', maxWidth: '100%' }}>
@@ -54,12 +52,14 @@ export default function AvisListPage() {
                       <div className="mt-2 mt-md-0">
                         <button
                           className="btn btn-outline-primary btn-sm me-2"
+                          style={{ minWidth: '120px' }}
                           onClick={() => navigate(`/avis/${avis.id}`)}
                         >
                           Voir
                         </button>
                         <button
                           className="btn btn-outline-secondary btn-sm"
+                          style={{ minWidth: '120px' }}
                           onClick={() => vm.downloadPDF(avis.id)}
                         >
                           Télécharger
@@ -69,6 +69,17 @@ export default function AvisListPage() {
                   </div>
                 </div>
               ))
+            ) : (
+              // Placeholder pour garder la même taille que les cartes
+              <div className="mb-3">
+                <div className="card shadow-sm" style={{ width: '630px', maxWidth: '100%', minHeight: '80px' }}>
+                  <div
+                    className="card-body d-flex justify-content-center align-items-center"
+                  >
+                    <span className="text-secondary small text-center">Aucun avis disponible</span>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </div>
