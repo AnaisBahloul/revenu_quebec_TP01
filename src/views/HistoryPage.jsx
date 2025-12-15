@@ -29,7 +29,7 @@ export default function HistoryPage() {
     if (statusLower === 'reçue') return 'badge text-bg-primary';
     if (statusLower === 'validée automatiquement') return 'badge text-bg-success';
     if (statusLower === 'en révision par un agent') return 'badge text-bg-warning';
-    if (statusLower === 'clôturée' || statusLower === 'traitée') return 'badge text-bg-info';
+    if (statusLower === 'traitée' || statusLower === 'traitée') return 'badge text-bg-info';
     
     return 'badge text-bg-secondary';
   };
@@ -108,7 +108,7 @@ export default function HistoryPage() {
         style={{ minWidth: '120px' }}
         onClick={() => vm.viewDeclaration(declaration.declarationId)}
       >
-        Voir détails
+        Voir déclaration
       </button>
     );
   };

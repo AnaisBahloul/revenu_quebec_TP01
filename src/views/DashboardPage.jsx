@@ -13,6 +13,7 @@ export default function DashboardPage() {
 
   const [summary, setSummary] = useState({
     nom: '',
+    hasBrouillon: false,  
     declarationStatus: '',
     lastDeclarationStep: null,
     alerts: [],
@@ -21,7 +22,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const summaryData = dashboardVM.getUserSummary();
+      const summaryData = await dashboardVM.getUserSummary();
       const avisData = await avisVM.getAllAvis();
       setSummary({ ...summaryData, avis: avisData });
     };
@@ -32,9 +33,53 @@ export default function DashboardPage() {
   if (action === 'poursuivre') {
     navigate('/declaration', { state: { step: summary.lastDeclarationStep } });
   } else {
-    // Nouvelle déclaration → étape 1 et reset formulaire
-    navigate('/declaration', { state: { step: 1, reset: true } });
+    handleNewDeclaration();
   }
+};
+
+const handleNewDeclaration = async () => {
+  // Une seule confirmation
+  if (summary.hasBrouillon) {
+     const confirmed = window.confirm(
+      "Vous avez une déclaration en cours non terminée.\n\n" +
+      "Voulez-vous vraiment commencer une nouvelle déclaration ?\n" +
+      "La déclaration en cours sera supprimée et ne pourra pas être récupérée."
+    );
+    
+    if (!confirmed) {
+      return;
+    }
+  }
+
+   const storedUser = JSON.parse(localStorage.getItem('user')) || {};
+  
+  try {
+    const storedUser = JSON.parse(localStorage.getItem('user')) || {};
+    const userId = storedUser.id || storedUser.utilisateurId;
+    
+    // Supprimer l'ancien brouillon
+    if (userId && summary.hasBrouillon) {
+      const response = await fetch(`${dashboardVM.baseURL}/declarations/brouillon/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+        }
+      });
+      
+      if (response.ok) {
+        console.log('Ancien brouillon supprimé');
+      }
+    }
+  } catch (error) {
+    console.error('Erreur suppression brouillon:', error);
+  }
+  
+  // Nettoyer et naviguer
+  localStorage.removeItem('draftDeclaration');
+  const updatedUser = { ...storedUser, lastDeclarationStep: null };
+  localStorage.setItem('user', JSON.stringify(updatedUser));
+  
+  navigate('/declaration', { state: { step: 1, reset: true } });
 };
 
 
@@ -58,13 +103,13 @@ export default function DashboardPage() {
     <div className="card-body d-flex flex-column gap-2">
       <h5 className="fw-semibold">Déclaration</h5>
       <p className="text-secondary small mb-2">
-  {summary.lastDeclarationStep
+  {summary.hasBrouillon
     ? `Déclaration en cours, arrivée à l'étape ${summary.lastDeclarationStep}.`
     : 'Commencer une nouvelle déclaration en 3 étapes.'}
 </p>
 
 
-      {summary.lastDeclarationStep ? (
+      {summary.hasBrouillon ? (
         <div className="d-flex gap-2">
           <button
             className="btn btn-outline-primary btn-sm"

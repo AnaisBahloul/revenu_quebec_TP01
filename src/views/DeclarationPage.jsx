@@ -11,9 +11,10 @@ import { useNavigate } from 'react-router-dom';
 
 
 export default function DeclarationPage() {
-  const vm = new DeclarationViewModel();
-  const fileInputRef = useRef(null);
 
+const vm = useMemo(() => new DeclarationViewModel(), []);
+const fileInputRef = useRef(null);
+const navigate = useNavigate();
 const location = useLocation();
 const initialStep = location.state?.step || 1;
 const resetForm = location.state?.reset || false;
@@ -32,14 +33,30 @@ useEffect(() => {
     email: '',
     telephone: '',
     citoyennete: '',
-    revenusEmploi: [{ employeur: '', montant: '' }],
-    autresRevenus: [{ type: null, montant: '' }],
+    revenusEmploi: [],
+    autresRevenus: [],
     fichiers: [],
     confirmationExactitude: false
   });
 
 
 const options = useMemo(() => countryList().getLabels(), []);
+
+useEffect(() => {
+  const loadExistingDraft = async () => {
+    try {
+      const savedDraft = await vm.loadDraft();
+      if (savedDraft && !resetForm) {
+        setForm(savedDraft.form);
+        setStep(savedDraft.step);
+      }
+    } catch (error) {
+      console.error('Erreur chargement brouillon:', error);
+    }
+  };
+  
+  loadExistingDraft();
+}, [vm, resetForm]);
 
 function CountrySelect({ value, onChange, options }) {
   return (
@@ -90,18 +107,59 @@ function CountrySelect({ value, onChange, options }) {
     setStep(4);
   };
 
-  const handleSubmit = () => {
-    if (!form.confirmationExactitude) {
-      setError("Vous devez confirmer l'exactitude.");
-      return;
-    }
-    setError("");
-    const data = {
-      ...form,
-      revenus: [...form.revenusEmploi, ...form.autresRevenus],
-    };
-    vm.submitDeclaration(data);
+  const handleSave = async () => {
+  const data = {
+    ...form,
+    revenus: [...form.revenusEmploi, ...form.autresRevenus],
   };
+  try {
+    await vm.saveDraft(data, step);
+    navigate('/dashboard');
+  } catch (error) {
+    console.error('Erreur sauvegarde:', error);
+  }
+};
+
+const handleSubmit = async () => {
+  // Validation complète
+  const errors = [];
+  
+  if (!form.adresse) errors.push("L'adresse est obligatoire");
+  if (!form.email) errors.push("L'email est obligatoire");
+  if (!form.telephone) errors.push("Le téléphone est obligatoire");
+  if (!form.citoyennete) errors.push("La citoyenneté est obligatoire");
+  
+  // Vérifier au moins un revenu d'emploi rempli
+  const hasRevenuEmploi = form.revenusEmploi.some(r => 
+    r.employeur && r.employeur.trim() && r.montant
+  );
+  if (!hasRevenuEmploi) {
+    errors.push("Au moins un revenu d'emploi est obligatoire");
+  }
+  
+  if (!form.confirmationExactitude) {
+    errors.push("Vous devez confirmer l'exactitude des informations");
+  }
+  
+  if (errors.length > 0) {
+    setError(errors.join(". "));
+    return;
+  }
+  
+  setError("");
+  
+  try {
+    await vm.submitDeclaration(form);
+    navigate('/dashboard', { 
+      state: { 
+        message: 'Déclaration soumise avec succès !',
+        success: true 
+      } 
+    });
+  } catch (error) {
+    setError("Erreur lors de la soumission: " + error.message);
+  }
+};
 
   // Mise à jour d'un champ de revenu
 const handleChange = (type, idx, key, value) => {
@@ -111,19 +169,47 @@ const handleChange = (type, idx, key, value) => {
 };
 
 
-const navigate = useNavigate();
-const handleSave = () => {
-  const data = {
-    ...form,
-    revenus: [...form.revenusEmploi, ...form.autresRevenus],
-  };
-  vm.saveDraft(data, step); // ← on envoie la step actuelle
- // Retour au dashboard pour que le bouton Poursuivre apparaisse
-  navigate('/dashboard');
-};
-
-
-const handleCancel = () => {
+const handleCancel = async () => {
+  // Vérifier s'il y a des données non sauvegardées
+  const hasUnsavedChanges = 
+    form.adresse || form.email || form.telephone || form.citoyennete ||
+    form.revenusEmploi.some(r => r.employeur || r.montant) ||
+    form.autresRevenus.some(r => r.type || r.montant) ||
+    form.fichiers.length > 0;
+  
+  if (hasUnsavedChanges) {
+    const confirmed = window.confirm(
+      "Êtes-vous sûr de vouloir annuler ? " +
+      "Toutes les modifications non sauvegardées seront perdues et le brouillon sera supprimé."
+    );
+    
+    if (!confirmed) {
+      return;
+    }
+  }
+  
+  try {
+    const storedUser = JSON.parse(localStorage.getItem('user')) || {};
+    const userId = storedUser.id || storedUser.utilisateurId;
+    
+    // Supprimer le brouillon du serveur
+    if (userId) {
+      const response = await fetch(`${vm.baseURL}/declarations/brouillon/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+        }
+      });
+      
+      if (response.ok) {
+        console.log('Brouillon supprimé du serveur');
+      }
+    }
+  } catch (error) {
+    console.error('Erreur suppression brouillon serveur:', error);
+  }
+  
+  // Réinitialiser
   setForm({
     adresse: '',
     email: '',
@@ -134,15 +220,15 @@ const handleCancel = () => {
     fichiers: [],
     confirmationExactitude: false
   });
-  setError(""); // réinitialise aussi les erreurs
-
-  // Supprime la progression dans le localStorage
-  const storedUser = JSON.parse(localStorage.getItem('user')) || {};
+  setError("");
+  setStep(1);
+  
+  localStorage.removeItem('draftDeclaration');
+  
   const updatedUser = { ...storedUser, lastDeclarationStep: null };
   localStorage.setItem('user', JSON.stringify(updatedUser));
-
-  // Optionnel : tu peux naviguer vers le dashboard si tu veux
-  // navigate('/dashboard');
+  
+  navigate('/dashboard');
 };
 
 const typeRevenuOptions = [
@@ -240,8 +326,8 @@ const removeAutreRevenu = (idx) => {
               
               <div className="d-flex justify-content-between mt-4 align-items-center">
   {/* Annuler à gauche */}
-  <button className="btn btn-outline-danger" onClick={handleCancel}>
-    Annuler
+  <button className="btn btn-outline-secondary" onClick={() => navigate('/dashboard')}>
+    ← Retour
   </button>
 
   {/* Sauvegarder au centre */}
@@ -266,92 +352,161 @@ const removeAutreRevenu = (idx) => {
     <div className="card-body">
 
       {/* Revenus d'emploi */}
-      <h6>Revenus d'emploi <span className="text-danger">*</span></h6>
-      {form.revenusEmploi.map((rev, idx) => (
-        <div className="row g-3 mb-2 align-items-center" key={idx}>
-          <div className="col-md-8">
-            <input
-              className="form-control"
-              placeholder="Nom de l'employeur"
-              value={rev.employeur}
-              onChange={(e) => handleChange("revenusEmploi", idx, "employeur", e.target.value)}
-            />
-          </div>
-
-          <div className="col-md-3">
-            <input
-              className="form-control"
-              type="number"
-              placeholder="Montant"
-              value={rev.montant}
-              onChange={(e) => handleChange("revenusEmploi", idx, "montant", e.target.value)}
-            />
-          </div>
-
-          <div className="col-md-1 d-flex justify-content-between">
-            {idx === 0 && (
-              <button
-                className="btn btn-outline-success btn-sm"
-                onClick={addRevenuEmploi}
-              >
-                +
-              </button>
-            )}
-            {idx > 0 && (
-              <button
-                className="btn btn-outline-danger btn-sm"
-                onClick={() => removeRevenuEmploi(idx)}
-              >
-                x
-              </button>
-            )}
-          </div>
-        </div>
-      ))}
-
+<h6>Revenus d'emploi <span className="text-danger">*</span></h6>
+{form.revenusEmploi.length === 0 ? (
+  // Si vide, afficher UNE SEULE ligne vide avec bouton +
+  <div className="row g-3 mb-2 align-items-center">
+    <div className="col-md-8">
+      <input
+        className="form-control"
+        placeholder="Nom de l'employeur"
+        value=""
+        onChange={(e) => {
+          // Crée un nouveau array avec une ligne
+          setForm({
+            ...form,
+            revenusEmploi: [{ employeur: e.target.value, montant: '' }]
+          });
+        }}
+      />
+    </div>
+    <div className="col-md-3">
+      <input
+        className="form-control"
+        type="number"
+        placeholder="Montant"
+        value=""
+        onChange={(e) => {
+          setForm({
+            ...form,
+            revenusEmploi: [{ employeur: '', montant: e.target.value }]
+          });
+        }}
+      />
+    </div>
+    <div className="col-md-1">
+      <button className="btn btn-outline-success btn-sm" onClick={addRevenuEmploi}>
+        +
+      </button>
+    </div>
+  </div>
+) : (
+  // Si pas vide, afficher TOUTES les lignes avec la logique des boutons
+  form.revenusEmploi.map((rev, idx) => (
+    <div className="row g-3 mb-2 align-items-center" key={idx}>
+      <div className="col-md-8">
+        <input
+          className="form-control"
+          placeholder="Nom de l'employeur"
+          value={rev.employeur}
+          onChange={(e) => handleChange("revenusEmploi", idx, "employeur", e.target.value)}
+        />
+      </div>
+      <div className="col-md-3">
+        <input
+          className="form-control"
+          type="number"
+          placeholder="Montant"
+          value={rev.montant}
+          onChange={(e) => handleChange("revenusEmploi", idx, "montant", e.target.value)}
+        />
+      </div>
+      <div className="col-md-1 d-flex">
+        {/* Bouton + SEULEMENT sur la PREMIÈRE ligne */}
+        {idx === 0 && (
+          <button className="btn btn-outline-success btn-sm me-1" onClick={addRevenuEmploi}>
+            +
+          </button>
+        )}
+        {/* Bouton - SEULEMENT si plus d'une ligne ET pas la première */}
+        {form.revenusEmploi.length > 1 && idx > 0 && (
+          <button className="btn btn-outline-danger btn-sm" onClick={() => removeRevenuEmploi(idx)}>
+            x
+          </button>
+        )}
+      </div>
+    </div>
+  ))
+)}
       {/* Autres revenus */}
-      <h6 className="mt-3">Autres revenus</h6>
-      {form.autresRevenus.map((rev, idx) => (
-        <div className="row g-3 mb-2 align-items-center" key={idx}>
-          <div className="col-md-8">
-            <Select
-  options={typeRevenuOptions}
-  value={typeRevenuOptions.find(o => o.value === rev.type) || null}
-  onChange={(e) => handleChange("autresRevenus", idx, "type", e.value)}
-/>
-
-          </div>
-
-          <div className="col-md-3">
-            <input
-              className="form-control"
-              type="number"
-              placeholder="Montant"
-              value={rev.montant}
-              onChange={(e) => handleChange("autresRevenus", idx, "montant", e.target.value)}
-            />
-          </div>
-
-          <div className="col-md-1 d-flex justify-content-between">
-            {idx === 0 && (
-              <button
-                className="btn btn-outline-success btn-sm"
-                onClick={addAutreRevenu}
-              >
-                +
-              </button>
-            )}
-            {idx > 0 && (
-              <button
-                className="btn btn-outline-danger btn-sm"
-                onClick={() => removeAutreRevenu(idx)}
-              >
-                x
-              </button>
-            )}
-          </div>
-        </div>
-      ))}
+<h6 className="mt-3">Autres revenus</h6>
+{form.autresRevenus.length === 0 ? (
+  // Si vide, afficher UNE SEULE ligne vide avec bouton +
+  <div className="row g-3 mb-2 align-items-center">
+    <div className="col-md-8">
+      <Select
+        options={typeRevenuOptions}
+        value={null}
+        onChange={(e) => {
+          // Crée un nouveau array avec une ligne
+          setForm({
+            ...form,
+            autresRevenus: [{ type: e.value.toString(), montant: '' }]
+          });
+        }}
+        placeholder="Sélectionnez un type"
+      />
+    </div>
+    <div className="col-md-3">
+      <input
+        className="form-control"
+        type="number"
+        placeholder="Montant"
+        value=""
+        onChange={(e) => {
+          setForm({
+            ...form,
+            autresRevenus: [{ type: '', montant: e.target.value }]
+          });
+        }}
+      />
+    </div>
+    <div className="col-md-1">
+      <button className="btn btn-outline-success btn-sm" onClick={addAutreRevenu}>
+        +
+      </button>
+    </div>
+  </div>
+) : (
+  // Si pas vide, afficher TOUTES les lignes avec la logique des boutons
+  form.autresRevenus.map((rev, idx) => (
+    <div className="row g-3 mb-2 align-items-center" key={idx}>
+      <div className="col-md-8">
+        <Select
+          options={typeRevenuOptions}
+          value={typeRevenuOptions.find(o => 
+            o.value === parseInt(rev.type) || o.value.toString() === rev.type?.toString()
+          ) || null}
+          onChange={(e) => handleChange("autresRevenus", idx, "type", e.value)}
+          placeholder="Sélectionnez un type"
+        />
+      </div>
+      <div className="col-md-3">
+        <input
+          className="form-control"
+          type="number"
+          placeholder="Montant"
+          value={rev.montant}
+          onChange={(e) => handleChange("autresRevenus", idx, "montant", e.target.value)}
+        />
+      </div>
+      <div className="col-md-1 d-flex">
+        {/* Bouton + SEULEMENT sur la PREMIÈRE ligne */}
+        {idx === 0 && (
+          <button className="btn btn-outline-success btn-sm me-1" onClick={addAutreRevenu}>
+            +
+          </button>
+        )}
+        {/* Bouton - SEULEMENT si plus d'une ligne ET pas la première */}
+        {form.autresRevenus.length > 1 && idx > 0 && (
+          <button className="btn btn-outline-danger btn-sm" onClick={() => removeAutreRevenu(idx)}>
+            x
+          </button>
+        )}
+      </div>
+    </div>
+  ))
+)}
 
       {error && <p className="text-danger fw-bold mt-2">{error}</p>}
 
@@ -395,7 +550,7 @@ const removeAutreRevenu = (idx) => {
               <ul className="list-group list-group-flush">
                 {form.fichiers.map((f, idx) => (
                   <li key={idx} className="list-group-item d-flex justify-content-between align-items-center">
-                    {f.name}
+                    {f.name || f.originalName}
                     <FaTrash
                       style={{ cursor: 'pointer', color: 'red' }}
                       onClick={() => {
@@ -462,12 +617,16 @@ const removeAutreRevenu = (idx) => {
         <div className="col-12 col-md-6">
           <div className="border rounded p-2 bg-light h-100">
             <h6 className="mb-1">Autres revenus</h6>
-            {form.autresRevenus.map((r, idx) => (
-              <div key={idx} className="border rounded p-1 mb-1">
-                <p className="mb-1"><strong>Type :</strong> {r.type}</p>
-                <p className="mb-1"><strong>Montant :</strong> {r.montant} CAD</p>
-              </div>
-            ))}
+            {/* Autres revenus dans l'étape 4 */}
+{form.autresRevenus.map((r, idx) => {
+  const typeLabel = typeRevenuOptions.find(opt => opt.value.toString() === r.type?.toString())?.label || 'Non spécifié';
+  return (
+    <div key={idx} className="border rounded p-1 mb-1">
+      <p className="mb-1"><strong>Type :</strong> {typeLabel}</p>
+      <p className="mb-1"><strong>Montant :</strong> {r.montant} CAD</p>
+    </div>
+  );
+})}
           </div>
         </div>
       </div>

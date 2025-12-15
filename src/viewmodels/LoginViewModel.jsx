@@ -1,4 +1,4 @@
-// src/viewmodels/LoginViewModel.js
+// src/viewmodels/LoginViewModel.js - 
 export class LoginViewModel {
   constructor(baseURL = 'http://localhost:5100/api') {
     this.baseURL = baseURL;
@@ -18,10 +18,14 @@ export class LoginViewModel {
       if (!response.ok) return false;
 
       const data = await response.json();
+      console.log('Réponse login:', data); // DEBUG
 
       localStorage.setItem("sessionId", data.sessionId);
+      
+      // Stocke TOUTE la réponse utilisateur
       localStorage.setItem("user", JSON.stringify(data.utilisateur));
 
+      console.log('User stocké dans localStorage:', data.utilisateur); // DEBUG
 
       return true;
     } catch (err) {
