@@ -53,6 +53,7 @@ export class HistoryViewModel {
           statusCode: d.etatCode,
           amount: amount,
           estBrouillon: d.estBrouillon,
+          currentStep: d.currentStep || 4,
         };
       });
 

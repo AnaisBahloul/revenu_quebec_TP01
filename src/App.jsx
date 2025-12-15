@@ -8,6 +8,7 @@ import HistoryPage from './views/HistoryPage';
 import ProfilePage from './views/ProfilePage';
 import AvisListPage from './views/AvisListPage';
 import AvisPage from './views/AvisPage';
+import DeclarationView from './views/DeclarationView';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/avis" element={<AvisListPage />} /> {/* liste des avis */}
         <Route path="/avis/:id" element={<AvisPage />} /> {/* détails d'un avis */}
         <Route path="/profile" element={<ProfilePage />} />
+         <Route path="/declaration/:id" element={<DeclarationView />} /> {/*détails d'une declaration */}
       </Routes>
     </Router>
   );

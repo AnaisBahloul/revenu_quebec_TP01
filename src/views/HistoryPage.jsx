@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import Navigation from '../components/Navigation';
 import { HistoryViewModel } from '../viewmodels/HistoryViewModel';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { useNavigate } from 'react-router-dom';
 
 export default function HistoryPage() {
   const vm = new HistoryViewModel();
   const [declarations, setDeclarations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -77,16 +79,21 @@ export default function HistoryPage() {
   const renderActions = (declaration) => {
     // Si c'est un brouillon
     if (declaration.estBrouillon) {
-      return (
-        <button
-          className="btn btn-outline-warning btn-sm"
-          style={{ minWidth: '120px' }}
-          onClick={() => vm.viewDeclaration(declaration.declarationId)}
-        >
-          Continuer
-        </button>
-      );
-    }
+    return (
+      <button
+        className="btn btn-outline-warning btn-sm"
+        style={{ minWidth: '120px' }}
+        onClick={() => navigate('/declaration', { 
+          state: { 
+            step: declaration.currentStep || 4, // Utilise l'étape sauvegardée
+            reset: false 
+          } 
+        })}
+      >
+        Continuer
+      </button>
+    );
+  }
 
     // Si la déclaration a un avis
     if (declaration.avisId && declaration.avis) {
@@ -106,7 +113,7 @@ export default function HistoryPage() {
       <button
         className="btn btn-outline-secondary btn-sm"
         style={{ minWidth: '120px' }}
-        onClick={() => vm.viewDeclaration(declaration.declarationId)}
+         onClick={() => navigate(`/declaration/${declaration.declarationId}`)}
       >
         Voir déclaration
       </button>

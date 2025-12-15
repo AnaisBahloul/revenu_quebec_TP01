@@ -7,6 +7,7 @@ export class DeclarationViewModel {
     console.log('User chargé dans ViewModel:', this.user);
   }
 
+  
   // Méthode helper pour obtenir l'ID utilisateur
   getUserId() {
     // Essaie plusieurs clés possibles pour l'ID
